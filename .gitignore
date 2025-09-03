@@ -1,0 +1,14 @@
+# Terraform
+.terraform/
+**/.terraform/
+*.tfstate
+*.tfstate.backup
+crash.log
+crash.*.log
+
+# Provider plugin caches
+infra/init/.terraform/
+.terraform/
+
+# macOS
+.DS_Store
