@@ -1,0 +1,25 @@
+name: IaC (test)
+on: { workflow_dispatch: {} }
+permissions: { id-token: write, contents: read }
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    environment: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_UAMI_CLIENT_ID }}
+          tenant-id:  de4f9116-5264-4c07-9d8e-981e0a5744ac
+          subscription-id: 6c7b1d9f-3b43-453b-a347-819055cbdec8
+      - uses: hashicorp/setup-terraform@v3
+      - name: Init (remote state)
+        working-directory: infra/networking
+        run: terraform init --backend-config=../.config/test.tfbackend
+      - name: Plan
+        working-directory: infra/networking
+        run: terraform plan -input=false
+      - name: Apply (main only)
+        if: github.ref == 'refs/heads/main'
+        working-directory: infra/networking
+        run: terraform apply -auto-approve -input=false
