@@ -13,13 +13,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Login s Service Principalom (privremeno, samo za bootstrap)
-      - uses: azure/login@v2
+      - name: Azure login as Service Principal
+        uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_SP_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_SP_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SP_SUBSCRIPTION_ID }}
-          client-secret: ${{ secrets.AZURE_SP_CLIENT_SECRET }}
+          creds: ${{ secrets.AZURE_SP_CREDS }}
 
       - uses: hashicorp/setup-terraform@v3
 
