@@ -75,6 +75,12 @@ resource "azurerm_role_assignment" "blob_data_contributor_msi" {
   skip_service_principal_aad_check = true
 }
 
+resource "azurerm_role_assignment" "uami_contributor_subscription" {
+  principal_id         = azurerm_user_assigned_identity.this.principal_id
+  role_definition_name = "Contributor"
+  scope                = "/subscriptions/${var.subscription_id}"
+}
+
 # --- Auto-generate backend config files (partial backend) ---
 resource "local_file" "tfbackend" {
   content  = <<EOD
