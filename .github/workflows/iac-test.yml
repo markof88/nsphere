@@ -1,25 +1,46 @@
 name: IaC (test)
-on: { workflow_dispatch: {} }
-permissions: { id-token: write, contents: read }
+
+on:
+  workflow_dispatch:
+    inputs:
+      stack:
+        description: 'Stack folder (e.g. networking, aks, storage)'
+        required: true
+        default: 'networking'
+      varfile:
+        description: 'TFVars file (e.g. test.tfvars, prd.tfvars)'
+        required: true
+        default: 'test.tfvars'
+
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   apply:
     runs-on: ubuntu-latest
     environment: test
     steps:
       - uses: actions/checkout@v4
-      - uses: azure/login@v2
+
+      - name: Azure login (OIDC via UAMI)
+        uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_UAMI_CLIENT_ID }}
           tenant-id:  de4f9116-5264-4c07-9d8e-981e0a5744ac
           subscription-id: 6c7b1d9f-3b43-453b-a347-819055cbdec8
+
       - uses: hashicorp/setup-terraform@v3
-      - name: Init (remote state)
-        working-directory: infra/networking
+
+      - name: Terraform Init (remote state)
+        working-directory: infra/${{ github.event.inputs.stack }}
         run: terraform init --backend-config=../.config/test.tfbackend
-      - name: Plan
-        working-directory: infra/networking
-        run: terraform plan -input=false
-      - name: Apply (main only)
+
+      - name: Terraform Plan
+        working-directory: infra/${{ github.event.inputs.stack }}
+        run: terraform plan -input=false --var-file=./_parameters/${{ github.event.inputs.varfile }}
+
+      - name: Terraform Apply
         if: github.ref == 'refs/heads/main'
-        working-directory: infra/networking
-        run: terraform apply -auto-approve -input=false
+        working-directory: infra/${{ github.event.inputs.stack }}
+        run: terraform apply -input=false -auto-approve --var-file=./_parameters/${{ github.event.inputs.varfile }}
